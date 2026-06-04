@@ -4,7 +4,7 @@ This project is ready for a Git-backed Render Web Service deploy.
 
 ## What Render Will Run
 
-- Build command: `npm ci && npm run build`
+- Build command: `npm ci --include=dev && npm run build`
 - Start command: `npm start`
 - Runtime: `node`
 - Plan: `free`
