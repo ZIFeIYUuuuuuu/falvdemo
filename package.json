@@ -7,7 +7,7 @@
     "dev": "tsx server.js",
     "build": "vite build && esbuild server.js --bundle --platform=node --format=esm --packages=external --outfile=dist/server.js",
     "start": "node dist/server.js",
-    "test": "node ./tests/memory.test.mjs && node ./tests/rag-core.test.mjs && node ./tests/policy-answering.test.mjs"
+    "test": "node ./tests/memory.test.mjs && node ./tests/rag-core.test.mjs && node ./tests/policy-answering.test.mjs && node ./tests/server-paths.test.mjs"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
