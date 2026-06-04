@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: baozhi-demo
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LLM_PROVIDER
+        value: qwen
+      - key: QWEN_MODEL
+        value: qwen3.6-plus
