@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer } from "vite";
@@ -69,7 +70,7 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(__dirname, "dist");
+    const distPath = resolveProductionDistPath(__dirname);
     app.use(express.static(distPath));
     app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
@@ -151,6 +152,12 @@ export function validateChatPayload(body = {}) {
     memoryWindow,
     contexts,
   };
+
+  export function resolveProductionDistPath(baseDir) {
+  const candidates = [path.join(baseDir, "dist"), baseDir];
+  return candidates.find((candidate) => existsSync(path.join(candidate, "index.html"))) || candidates[0];
+}
+  
 }
 
 function resolveProvider(rawProvider) {
