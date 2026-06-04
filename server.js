@@ -152,12 +152,11 @@ export function validateChatPayload(body = {}) {
     memoryWindow,
     contexts,
   };
+}
 
-  export function resolveProductionDistPath(baseDir) {
+export function resolveProductionDistPath(baseDir) {
   const candidates = [path.join(baseDir, "dist"), baseDir];
   return candidates.find((candidate) => existsSync(path.join(candidate, "index.html"))) || candidates[0];
-}
-  
 }
 
 function resolveProvider(rawProvider) {
