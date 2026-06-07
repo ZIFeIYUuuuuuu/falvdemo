@@ -1,0 +1,12 @@
+.git
+.env
+.playwright-cli
+dist
+node_modules
+output
+tmp
+tests
+DEPLOY_RENDER.md
+render.yaml
+*.log
+*.zip

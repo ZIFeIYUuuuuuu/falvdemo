@@ -3,7 +3,6 @@ import express from "express";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createServer as createViteServer } from "vite";
 
 dotenv.config({ override: true });
 
@@ -59,6 +58,7 @@ async function startServer() {
   });
 
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
@@ -267,8 +267,10 @@ export function buildPrompt(payload) {
     "answer 字段请按以下顺序组织成 3 到 4 段短段落：1. 当前保单/当前命中条款主要保什么；2. 这次问题是否直接落在当前责任范围；3. 依据边界或资料不足点；4. 最多 3 条简短合规引导。",
     "除非用户明确是在问保障认知，否则不要主动展开医保、医疗险、重疾险、住院津贴等一般知识。",
     "如果用户明确在问怎么买、该补什么保障、买哪类保险，或者你已经判断当前保单未直接覆盖该风险，可以在最后给出合规的购买引导。",
-    "这类购买引导必须是中性、克制的选购方向，不要催促下单，不要制造焦虑，不要承诺一定赔。",
-    "购买引导必须先声明“这不是当前保单直接条款结论”，再用“可优先了解”“可重点比较”“可结合预算评估”这类措辞给出方向。",
+    "这类购买引导可以带一点顾问式成交语气，但必须保持合规：可以自然使用“如果你确实担心这类风险，可优先配置”“可以尽早纳入比较”“可以先把这类保障补齐到方案里”这类表达。",
+    "购买引导必须先声明“这不是当前保单直接条款结论”，再用“可优先了解”“可重点比较”“可结合预算评估”“我可以继续帮你缩小购买方向”这类措辞给出方向。",
+    "购买引导不要只停留在泛泛提醒，尽量给出 1 到 2 个具体比较维度，例如预算、等待期、免责、报销范围、给付方式、健康告知门槛。",
+    "即使带有购买引导，也不要催促立刻下单，不要制造焦虑，不要承诺一定赔，不要把一般性建议说成对当前保单的既定结论。",
     "如果问题涉及被打伤、第三方伤害、意外住院、意外医疗费用，可优先引导了解意外险或其中的意外医疗责任；如果问题涉及一般疾病住院费用，可优先引导了解医疗险；如果问题涉及重大疾病收入损失，可补充重疾险通常解决的是确诊后的定额给付。",
     "语言要专业、可信、克制，不要营销，不要诱导购买。",
     "输出 JSON，字段必须是 verdict、verdictText、answer、guidance。",
@@ -647,20 +649,20 @@ function buildFallbackGuidance(
       primary
         ? "可以先查看这次命中的原文依据，再结合责任范围、触发条件和事实材料继续判断。"
         : "如果方便，也可以补充伤情结果、是否住院、是否做伤残鉴定，以及相关条款页，让判断更贴近实际情况。",
-      purchaseGuidance || "如果你想进一步了解这类风险通常由哪些保障承担，我也可以继续按保障类型帮你梳理，但这不是当前保单的直接条款结论。",
+      purchaseGuidance || "如果你想进一步了解这类风险通常由哪些保障承担，我也可以继续按预算、已有保障和风险重点，帮你收窄到更值得优先比较的产品方向，但这不是当前保单的直接条款结论。",
     ];
   }
 
   if (primary?.guidanceHints?.length) {
     return [
       ...primary.guidanceHints.slice(0, 2),
-      purchaseGuidance || "如需更完整地比较保障方向，也可以继续告诉我你的预算、已有保单和最担心的风险。",
+      purchaseGuidance || "如需更完整地比较保障方向，也可以继续告诉我你的预算、已有保单和最担心的风险，我可以继续帮你缩小购买方向。",
     ].slice(0, 3);
   }
 
   return [
     "可以继续补充同一产品的正式条款、理赔说明或服务指引。",
-    purchaseGuidance || "如果你手上还有其他保单，也可以一起对照看看是否已有相关保障。",
+    purchaseGuidance || "如果你手上还有其他保单，也可以一起对照看看是否已有相关保障；如果还没覆盖到这类风险，我也可以继续帮你收窄购买方向。",
     "如需做更准确的保障评估或投保决策，建议结合个人情况咨询持证顾问。",
   ];
 }
@@ -729,15 +731,15 @@ function buildPurchaseGuidance(supportSignals, protectionGuidance, hasCoverageGa
   const guidanceEntries = protectionGuidance?.entries || [];
 
   if (!guidanceEntries.length) {
-    return "这不是当前保单直接条款结论；如果你正准备补充保障，可优先比较与你最担心风险更相关的保障类型，也可以继续告诉我预算、已有保单和想解决的问题，我再帮你细化。";
+    return "这不是当前保单直接条款结论；如果你已经在考虑补充保障，可以先把最担心的风险、年预算和已有保单整理出来，我可以继续帮你缩小购买方向，并优先筛出更值得比较的 1 到 2 类保险。";
   }
 
   const [primaryEntry, secondaryEntry] = guidanceEntries;
   const comparisonTail = secondaryEntry
-    ? `，也可以一起比较${secondaryEntry.label}`
+    ? `，${secondaryEntry.label}也可以作为第二顺位一起比较`
     : "";
 
-  return `这不是当前保单直接条款结论；如果你正准备补充保障，可优先了解${primaryEntry.label}，${primaryEntry.detail}${comparisonTail}，再结合预算、已有保障和免责条款做判断。`;
+  return `这不是当前保单直接条款结论；如果你确实担心这类风险，可优先把${primaryEntry.label}纳入补充保障比较，重点看${primaryEntry.detail}${comparisonTail}；如果你愿意，我也可以继续按预算、已有保障和健康告知难度帮你缩小购买方向。`;
 }
 
 function sanitizeMatchRelation(value) {

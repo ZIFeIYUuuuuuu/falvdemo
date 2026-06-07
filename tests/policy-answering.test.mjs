@@ -58,6 +58,8 @@ const prompt = buildPrompt(weakPayload);
 assert.match(prompt.system, /除非用户明确是在问保障认知，否则不要主动展开医保、医疗险、重疾险、住院津贴等一般知识/);
 assert.match(prompt.system, /按当前保单条款，暂未看到可直接支持这一情形的责任依据/);
 assert.match(prompt.system, /如果用户明确在问怎么买、该补什么保障、买哪类保险/);
+assert.match(prompt.system, /顾问式成交语气/);
+assert.match(prompt.system, /我可以继续帮你缩小购买方向/);
 assert.match(prompt.user, /当前选中的保单：太平惠鑫保护理保险（长期护理险）/);
 assert.match(prompt.user, /关联强弱：弱相关/);
 assert.match(prompt.user, /如需购买引导时可参考的保障方向：意外险：可优先看是否包含意外医疗、伤残给付和住院相关责任/);
@@ -101,8 +103,12 @@ assert.ok(
   "purchase guidance should explicitly separate general purchase direction from current policy conclusions",
 );
 assert.ok(
-  purchaseIntentFallback.guidance.some((item) => /可优先了解|可优先比较/u.test(item)),
-  "purchase guidance should use neutral comparison wording",
+  purchaseIntentFallback.guidance.some((item) => /纳入补充保障比较|缩小购买方向/u.test(item)),
+  "purchase guidance should use a consultative conversion tone",
+);
+assert.ok(
+  purchaseIntentFallback.guidance.some((item) => /我也可以继续按预算|我可以继续帮你/u.test(item)),
+  "purchase guidance should invite the user into the next buying step",
 );
 
 const medicalGuidanceFallback = buildFallbackResponse(
@@ -125,6 +131,10 @@ assert.ok(
   medicalGuidanceFallback.guidance.some((item) => /住院、手术和治疗费用/u.test(item)),
   "medical guidance should explain the hospitalization expense fit",
 );
+assert.ok(
+  medicalGuidanceFallback.guidance.some((item) => /纳入补充保障比较|第二顺位一起比较/u.test(item)),
+  "medical guidance should actively guide the user toward comparing products",
+);
 
 const criticalIllnessGuidanceFallback = buildFallbackResponse(
   {
@@ -145,6 +155,10 @@ assert.ok(
 assert.ok(
   criticalIllnessGuidanceFallback.guidance.some((item) => /定额给付|收入损失/u.test(item)),
   "critical illness guidance should explain the income-loss fit",
+);
+assert.ok(
+  criticalIllnessGuidanceFallback.guidance.some((item) => /缩小购买方向|纳入补充保障比较/u.test(item)),
+  "critical illness guidance should keep a consultative sales-oriented close",
 );
 
 console.log("policy answering test passed");

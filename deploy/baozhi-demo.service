@@ -1,0 +1,18 @@
+[Unit]
+Description=Baozhi insurance knowledge demo
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/baozhi-demo
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=/opt/baozhi-demo/.env
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
